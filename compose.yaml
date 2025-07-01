@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: pgautoupgrade/pgautoupgrade:17-alpine
+    ports:
+      - "15432:5432"
+    command: "postgres -c fsync=off -c full_page_writes=off -c synchronous_commit=OFF"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: "trust"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 1s
+      timeout: 1s
+      retries: 10

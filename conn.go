@@ -24,7 +24,7 @@ var (
 
 type conn struct {
 	mu            sync.Mutex
-	impl          driver.Conn
+	rawConn       driver.Conn
 	savepointName string
 }
 
@@ -55,13 +55,21 @@ func (cn *conn) BeginTx(ctx context.Context, opts driver.TxOptions) (driver.Tx, 
 }
 
 func (cn *conn) QueryContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Rows, error) {
-	queryer, ok := cn.impl.(driver.QueryerContext)
+	queryer, ok := cn.rawConn.(driver.QueryerContext)
 
 	if !ok {
 		return nil, driver.ErrSkip
 	}
 
-	return queryer.QueryContext(ctx, query, args)
+	cn.mu.Lock()
+	rs, err := queryer.QueryContext(ctx, query, args)
+
+	if err != nil {
+		cn.mu.Unlock()
+		return nil, err
+	}
+
+	return &rows{mu: &cn.mu, rawRows: rs}, err
 }
 
 func (cn *conn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
@@ -84,7 +92,7 @@ func (cn *conn) ExecContext(ctx context.Context, query string, args []driver.Nam
 }
 
 func (cn *conn) execContext0(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
-	execer, ok := cn.impl.(driver.ExecerContext)
+	execer, ok := cn.rawConn.(driver.ExecerContext)
 
 	if !ok {
 		return nil, driver.ErrSkip
@@ -94,7 +102,7 @@ func (cn *conn) execContext0(ctx context.Context, query string, args []driver.Na
 }
 
 func (cn *conn) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {
-	preparer, ok := cn.impl.(driver.ConnPrepareContext)
+	preparer, ok := cn.rawConn.(driver.ConnPrepareContext)
 
 	if !ok {
 		return nil, driver.ErrSkip
@@ -104,7 +112,7 @@ func (cn *conn) PrepareContext(ctx context.Context, query string) (driver.Stmt, 
 }
 
 func (cn *conn) Ping(ctx context.Context) error {
-	pinger, ok := cn.impl.(driver.Pinger)
+	pinger, ok := cn.rawConn.(driver.Pinger)
 
 	if !ok {
 		return driver.ErrSkip

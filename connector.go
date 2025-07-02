@@ -31,7 +31,7 @@ func (cnct *connector) Connect(ctx context.Context) (driver.Conn, error) {
 		}
 
 		cn := &conn{impl: impl}
-		_, err = cn.ExecContext(ctx, "BEGIN", nil)
+		_, err = cn.execContext0(ctx, "BEGIN", nil)
 
 		if err != nil {
 			return nil, err
@@ -52,7 +52,7 @@ func (cnct *connector) Close() error {
 		return nil
 	}
 
-	_, err := cnct.conn.ExecContext(context.Background(), "ROLLBACK", nil)
+	_, err := cnct.conn.execContext0(context.Background(), "ROLLBACK", nil)
 
 	if err != nil {
 		return err

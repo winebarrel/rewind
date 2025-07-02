@@ -7,6 +7,9 @@
   "postUpdateOptions": [
     "gomodTidy"
   ],
+  "ignoreDeps": [
+    "github.com/winebarrel/rewind"
+  ],
   "vulnerabilityAlerts": {
     "enabled": true
   }

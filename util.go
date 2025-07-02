@@ -27,6 +27,10 @@ func savepoint(ctx context.Context, execer driver.ExecerContext) (string, error)
 }
 
 func rollbackToSavepoint(ctx context.Context, execer driver.ExecerContext, spn string) error {
+	if spn == "" {
+		return nil
+	}
+
 	_, err := execer.ExecContext(ctx, "ROLLBACK TO "+spn, nil)
 	return err
 }

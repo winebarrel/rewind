@@ -7,7 +7,7 @@ replace github.com/winebarrel/rewind => ../
 require (
 	github.com/jackc/pgx/v5 v5.7.5
 	github.com/samber/lo v1.51.0
-	github.com/winebarrel/rewind v0.0.0-00010101000000-000000000000
+	github.com/winebarrel/rewind v0.0.0-20250702000812-9034ca8dc40f
 )
 
 require (

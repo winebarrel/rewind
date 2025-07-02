@@ -24,13 +24,13 @@ func (cnct *connector) Connect(ctx context.Context) (driver.Conn, error) {
 	defer cnct.mu.Unlock()
 
 	if cnct.conn == nil {
-		impl, err := cnct.connect(ctx)
+		rawConn, err := cnct.connect(ctx)
 
 		if err != nil {
 			return nil, err
 		}
 
-		cn := &conn{impl: impl}
+		cn := &conn{rawConn: rawConn}
 		_, err = cn.execContext0(ctx, "BEGIN", nil)
 
 		if err != nil {
@@ -58,5 +58,5 @@ func (cnct *connector) Close() error {
 		return err
 	}
 
-	return cnct.conn.impl.Close()
+	return cnct.conn.rawConn.Close()
 }

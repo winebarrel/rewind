@@ -17,6 +17,7 @@ var (
 )
 
 var (
+	reBegin    = regexp.MustCompile(`(?i)^\s*BEGIN\s*;?\s*$`)
 	reCommit   = regexp.MustCompile(`(?i)^\s*COMMIT\s*;?\s*$`)
 	reRollback = regexp.MustCompile(`(?i)^\s*ROLLBACK\s*;?\s*$`)
 )
@@ -64,7 +65,7 @@ func (cn *conn) QueryContext(ctx context.Context, query string, args []driver.Na
 }
 
 func (cn *conn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
-	if reCommit.MatchString(query) {
+	if reBegin.MatchString(query) || reCommit.MatchString(query) {
 		cn.mu.Lock()
 		defer cn.mu.Unlock()
 		spn, err := savepoint(ctx, cn)
@@ -78,14 +79,18 @@ func (cn *conn) ExecContext(ctx context.Context, query string, args []driver.Nam
 	} else if reRollback.MatchString(query) {
 		return &nullResult{}, rollbackToSavepoint(ctx, cn, cn.savepointName)
 	} else {
-		execer, ok := cn.impl.(driver.ExecerContext)
-
-		if !ok {
-			return nil, driver.ErrSkip
-		}
-
-		return execer.ExecContext(ctx, query, args)
+		return cn.execContext0(ctx, query, args)
 	}
+}
+
+func (cn *conn) execContext0(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
+	execer, ok := cn.impl.(driver.ExecerContext)
+
+	if !ok {
+		return nil, driver.ErrSkip
+	}
+
+	return execer.ExecContext(ctx, query, args)
 }
 
 func (cn *conn) PrepareContext(ctx context.Context, query string) (driver.Stmt, error) {

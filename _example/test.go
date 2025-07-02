@@ -30,10 +30,12 @@ func main() {
 	txRollback(tx)
 	printBooks(db) // 6 -> 3 records
 
-	// raw COMMIT/ROLLBACK
+	// raw BEGIN/COMMIT/ROLLBACK
+	exec(db, "BEGIN")
 	exec(db, "INSERT INTO books VALUES (4, 'Quicksilver'), (5, 'Shield of Sparrows'), (6, 'A Court of Thorns and Roses')")
 	exec(db, "COMMIT") // 6 records
 
+	exec(db, "BEGIN")
 	exec(db, "INSERT INTO books VALUES (7, 'Dungeon Crawler Carl'), (8, 'A Court of Mist and Fury'), (9, 'A Court of Wings and Ruin')")
 	printBooks(db) // 9 records
 

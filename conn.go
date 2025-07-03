@@ -33,7 +33,8 @@ func (cn *conn) Prepare(query string) (driver.Stmt, error) {
 }
 
 func (cn *conn) Close() error {
-	// nothing to do
+	cn.mu.TryLock()
+	cn.mu.Unlock()
 	return nil
 }
 
